@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workflow-app xmlns="uri:oozie:workflow:0.4" name="launcher-for-${workflowName}-dealer:${dealercode}">
+
+  <global>
+    <job-tracker>${jobTracker}</job-tracker>
+    <name-node>${nameNode}</name-node>
+    <configuration>
+      <property>
+        <name>oozie.launcher.mapred.job.queue.name</name>
+        <value>${launchedQueueName}</value>
+      </property>
+      <property>
+        <name>mapred.job.queue.name</name>
+        <value>${queueName}</value>
+      </property>
+    </configuration>
+  </global>
+
+  <start to="run-workflow"/>
+
+  <action name="run-workflow">
+    <java>
+      <prepare>
+        <delete path='${nameNode}/user/dhruvk/avro_output'/>
+      </prepare>
+      <main-class>com.cat.olga.AvroDriver</main-class>
+      <java-opts>-Dqueue=${queueName} -DinputPath=${nameNode}/user/dhruvk/avro_input -DoutputPath=${nameNode}/user/dhruvk/avro_output</java-opts>
+      <arg>-libjars</arg>
+      <arg>${nameNode}${workBasePath}/workflow/lib/joda-time-2.3.jar</arg>
+      <arg>${nameNode}${workBasePath}/workflow/lib/avro-mapred-1.7.7-hadoop2</arg>
+      <arg>${nameNode}${workBasePath}/workflow/lib/avro-1.7.7.jar</arg>
+    </java>
+    <ok to="end"/>
+    <error to="error"/>
+  </action>
+
+  <kill name="error">
+    <message>error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+  </kill>
+
+  <end name="end"/>
+</workflow-app>
